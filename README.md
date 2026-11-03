@@ -1,7 +1,6 @@
 # Burrito NG 🌯
 
 > **Burrito NG** is a maintained fork of [Burrito](https://github.com/burrito-elixir/burrito), maintained by MUDROCK SOFTWARE LTD.
-> It is published on Hex as [`burrito_ng`](https://hex.pm/packages/burrito_ng) and is a drop-in replacement for `burrito`: module names (`Burrito.*`) and the `burrito:` release configuration key are unchanged.
 
 [![Hex version badge](https://img.shields.io/hexpm/v/burrito_ng.svg)](https://hex.pm/packages/burrito_ng)
 
