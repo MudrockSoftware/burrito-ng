@@ -2,13 +2,13 @@ defmodule Burrito.MixProject do
   use Mix.Project
 
   @version String.trim(File.read!("VERSION"))
-  @github_url "https://github.com/burrito-elixir/burrito"
+  @github_url "https://github.com/MudrockSoftware/burrito-ng"
 
   def project do
     [
-      app: :burrito,
+      app: :burrito_ng,
       description:
-        "Burrito is our answer to the problem of distributing Elixir applications across varied environments. Turn your Elixir application into a simple, self-contained, single-file executable for MacOS, Linux, and Windows.",
+        "A maintained fork of Burrito. Burrito is our answer to the problem of distributing Elixir applications across varied environments. Turn your Elixir application into a simple, self-contained, single-file executable for MacOS, Linux, and Windows.",
       version: @version,
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
@@ -31,14 +31,15 @@ defmodule Burrito.MixProject do
 
   def package do
     [
-      maintainers: ["Digit"],
-      name: :burrito,
+      maintainers: ["MUDROCK SOFTWARE LTD"],
+      name: :burrito_ng,
       licenses: ["MIT"],
       files:
         ~w(lib LICENSE VERSION mix.exs README.md .formatter.exs src bin _dummy_plugin.zig build.zig),
       links: %{
-        "Github" => @github_url,
-        "Sponsor" => "https://github.com/sponsors/doawoo"
+        "GitHub" => @github_url,
+        "Changelog" => "#{@github_url}/blob/main/CHANGELOG.md",
+        "Original Project" => "https://github.com/burrito-elixir/burrito"
       }
     ]
   end

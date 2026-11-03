@@ -1,8 +1,9 @@
-# Burrito 🌯
+# Burrito NG 🌯
 
-> ⚠️ NOTICE: This repo will be _archived_ on November 30th 2026 ⚠️
+> **Burrito NG** is a maintained fork of [Burrito](https://github.com/burrito-elixir/burrito), maintained by MUDROCK SOFTWARE LTD.
+> It is published on Hex as [`burrito_ng`](https://hex.pm/packages/burrito_ng) and is a drop-in replacement for `burrito`: module names (`Burrito.*`) and the `burrito:` release configuration key are unchanged.
 
-[![Hex version badge](https://img.shields.io/hexpm/v/burrito.svg)](https://hex.pm/packages/burrito)
+[![Hex version badge](https://img.shields.io/hexpm/v/burrito_ng.svg)](https://hex.pm/packages/burrito_ng)
 
 ## Cross-Platform Elixir Deployments
 
@@ -120,13 +121,15 @@ You must have the following installed and in your PATH:
 
 #### Mix Project Setup
 
-1. Add `burrito` to your list of dependencies:
+1. Add `burrito_ng` to your list of dependencies:
 
     ```elixir
     defp deps do
-      [{:burrito, "~> 1.0"}]
+      [{:burrito_ng, "~> 1.6"}]
     end
     ```
+
+    If you are migrating from `burrito`, replace `{:burrito, ...}` with `{:burrito_ng, ...}` in your deps. No other changes are needed.
 
 2. Create a `releases` function in your `mix.exs`, add and configure the following for your project:
 
@@ -388,6 +391,8 @@ Minimizing the runtime dependencies of the package binaries is an explicit desig
 
 ## Contributing
 #### Welcome!
-We are happy to review and accept pull requests to improve Burrito, and ask that you follow the established code formatting present in the repo!
+We are happy to review and accept pull requests to improve Burrito NG at [MudrockSoftware/burrito-ng](https://github.com/MudrockSoftware/burrito-ng), and ask that you follow the established code formatting present in the repo!
 
 Everything in this repo is licensed under The MIT License, see `LICENSE` for the full license text.
+
+Burrito NG is based on the original [Burrito](https://github.com/burrito-elixir/burrito) project. Many thanks to its authors and contributors.

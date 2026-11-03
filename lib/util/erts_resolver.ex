@@ -13,7 +13,7 @@ defmodule Burrito.Util.ERTSResolver do
 
   @spec resolve(Burrito.Builder.Target.t()) :: Target.t()
   def resolve(%Target{} = target) do
-    resolve_module = Application.get_env(:burrito, :erts_resolver, DefaultERTSResolver)
+    resolve_module = Application.get_env(:burrito_ng, :erts_resolver, DefaultERTSResolver)
     resolve_module.do_resolve(target)
   end
 end

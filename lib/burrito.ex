@@ -14,7 +14,7 @@ defmodule Burrito do
 
   @spec register_erts_resolver(module()) :: :ok
   def register_erts_resolver(module) when is_atom(module) do
-    Application.put_env(:burrito, :erts_resolver, module)
+    Application.put_env(:burrito_ng, :erts_resolver, module)
   end
 
   @spec get_versions() :: map()

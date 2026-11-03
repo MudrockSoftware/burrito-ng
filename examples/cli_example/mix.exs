@@ -46,7 +46,7 @@ defmodule ExampleCliApp.MixProject do
   defp deps do
     [
       {:exqlite, "~> 0.11.7"},
-      {:burrito, path: "../../"}
+      {:burrito_ng, path: "../../"}
     ]
   end
 end

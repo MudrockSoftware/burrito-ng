@@ -40,7 +40,7 @@ defmodule OnlyOne.MixProject do
 
   defp deps do
     [
-      {:burrito, path: "../../"},
+      {:burrito_ng, path: "../../"},
       {:evac, "~> 0.2.0"}
     ]
   end

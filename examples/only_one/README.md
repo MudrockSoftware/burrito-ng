@@ -1,6 +1,6 @@
 # OnlyOne
 
-This is an example usage of [Burrito](https://github.com/burrito-elixir/burrito), for cross-compiling an Elixir application for distribution.
+This is an example usage of [Burrito NG](https://github.com/MudrockSoftware/burrito-ng), for cross-compiling an Elixir application for distribution.
 
 ## Usage
 
