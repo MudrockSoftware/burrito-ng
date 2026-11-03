@@ -49,7 +49,9 @@ We were heavily inspired by [Bakeware](https://github.com/bake-bake-bake/bakewar
 * Automatically uninstalls old versions of the payload if a new version is run.
 
 #### Supported Versions:
-We provide pre-compiled Erlang/OTP distributions starting from `OTP-25.3` onwards for MacOS, Linux, and Windows targets.
+Burrito NG is tested with Elixir 1.20 on Erlang/OTP 27, 28 and 29.
+
+The upstream Burrito project provides pre-compiled Erlang/OTP distributions starting from `OTP-25.3` onwards for MacOS, Linux, and Windows targets. A pre-compiled distribution must exist for the **exact** OTP version installed on your build machine.
 If you require an older version, please refer to the section about (providing custom Erlang/OTP builds)[#using-custom-erts-builds].
 
 #### Technical Component Overview

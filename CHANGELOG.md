@@ -4,6 +4,7 @@
 
 First release of Burrito NG, a maintained fork of [Burrito](https://github.com/burrito-elixir/burrito). Burrito NG is **not compatible** with the original Burrito.
 
+* Tested with Elixir 1.20 on Erlang/OTP 27, 28 and 29.
 * Differences from the original Burrito:
   * Everything is named after Burrito NG:
     * Modules: `Burrito.*` → `BurritoNg.*` (e.g. `&BurritoNg.wrap/1`, `BurritoNg.Util.Args`).
