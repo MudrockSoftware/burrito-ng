@@ -32,14 +32,26 @@ jobs:
     name: build_examples_${{ matrix.host }}_otp${{ matrix.otp }}
     runs-on: ${{ matrix.host }}
     env:
-      # Override the Erlang version from mise.toml, Elixir stays on mise.toml's 1.20
-      MISE_ERLANG_VERSION: ${{ matrix.otp }}
+      # Override mise.toml's Erlang/Elixir per OTP line. Elixir must be the build for the same OTP major.
+      MISE_ERLANG_VERSION: ${{ matrix.erlang }}
+      MISE_ELIXIR_VERSION: ${{ matrix.elixir }}
     strategy:
       fail-fast: false
       matrix:
         host: [ubuntu-latest, macos-latest]
         otp: ["27", "28", "29"]
         include:
+          # Erlang versions are pinned to releases that have prebuilt ERTS on the Burrito CDN;
+          # the newest mise releases usually don't yet (the build then fails with a 404).
+          - otp: "27"
+            erlang: "27.3.4.17"
+            elixir: "1.20.5-otp-27"
+          - otp: "28"
+            erlang: "28.5"
+            elixir: "1.20.5-otp-28"
+          - otp: "29"
+            erlang: "29.1"
+            elixir: "1.20.5-otp-29"
           # Linux hosts can't link macOS binaries without an Apple SDK, so they skip macOS targets.
           - host: ubuntu-latest
             burrito_ng_targets: "linux linux_aarch64 windows"

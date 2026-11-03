@@ -197,7 +197,7 @@ defmodule BurritoNg.Steps.Patch.RecompileNIFs do
             {"AR", toolchain.ar},
             {"CC", "#{toolchain.cc} #{nif_link_flags(target)} #{extra_cflags}"},
             {"CXX", "#{toolchain.cxx} #{nif_link_flags(target)} #{extra_cxxflags}"}
-          ] ++ erts_env ++ extra_env,
+          ] ++ crosscompile_env(target, toolchain) ++ erts_env ++ extra_env,
         into: IO.stream()
       )
 
@@ -228,6 +228,19 @@ defmodule BurritoNg.Steps.Patch.RecompileNIFs do
       {_output, _non_zero} ->
         Log.error(:step, "Failed to rebuild #{dep} for #{cross_target}!")
         exit(1)
+    end
+  end
+
+  # NIF Makefiles (exqlite, Nerves-style ones, ...) pick host-specific linker flags from
+  # `uname -s` unless CROSSCOMPILE is set, e.g. `-undefined dynamic_lookup` on a macOS host,
+  # which GNU ld rejects when targeting Linux. Following the Nerves convention, its value is
+  # the toolchain prefix without the trailing dash.
+  defp crosscompile_env(%Target{os: os}, toolchain) do
+    if os == BurritoNg.Util.get_current_os() do
+      []
+    else
+      cc = toolchain.cc |> String.split() |> List.first()
+      [{"CROSSCOMPILE", String.replace_suffix(cc, "-gcc", "")}]
     end
   end
 
