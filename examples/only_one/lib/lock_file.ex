@@ -1,5 +1,5 @@
 defmodule OnlyOne.LockFile do
-  @lock_content "BURRITO"
+  @lock_content "BURRITO_NG"
 
   def make_lock_file do
     path = Path.join(File.cwd!(), ["only_one.lock"])

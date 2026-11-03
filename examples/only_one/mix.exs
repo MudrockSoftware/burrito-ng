@@ -15,8 +15,8 @@ defmodule OnlyOne.MixProject do
   def releases do
     [
       example_cli_app: [
-        steps: [:assemble, &Burrito.wrap/1],
-        burrito: [
+        steps: [:assemble, &BurritoNg.wrap/1],
+        burrito_ng: [
           targets: [
             macos: [os: :darwin, cpu: :x86_64],
             macos_m1: [os: :darwin, cpu: :aarch64],
@@ -25,7 +25,7 @@ defmodule OnlyOne.MixProject do
             # windows: [os: :windows, cpu: :x86_64] Windows not supported on this one, sorry :(
           ],
           debug: Mix.env() != :prod,
-          plugin: "./plugin/file_check.zig",
+          plugin: "./plugin/file_check.rs",
         ]
       ]
     ]

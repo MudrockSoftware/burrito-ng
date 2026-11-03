@@ -1,4 +1,4 @@
-defmodule Burrito.MixProject do
+defmodule BurritoNg.MixProject do
   use Mix.Project
 
   @version String.trim(File.read!("VERSION"))
@@ -8,7 +8,7 @@ defmodule Burrito.MixProject do
     [
       app: :burrito_ng,
       description:
-        "A maintained fork of Burrito. Burrito is our answer to the problem of distributing Elixir applications across varied environments. Turn your Elixir application into a simple, self-contained, single-file executable for MacOS, Linux, and Windows.",
+        "Burrito NG, a maintained (and incompatible) fork of Burrito. Turn your Elixir application into a simple, self-contained, single-file executable for MacOS, Linux, and Windows.",
       version: @version,
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
@@ -35,7 +35,7 @@ defmodule Burrito.MixProject do
       name: :burrito_ng,
       licenses: ["MIT"],
       files:
-        ~w(lib LICENSE VERSION mix.exs README.md .formatter.exs src bin _dummy_plugin.zig build.zig),
+        ~w(lib LICENSE VERSION mix.exs README.md .formatter.exs src bin build.rs Cargo.toml Cargo.lock),
       links: %{
         "GitHub" => @github_url,
         "Changelog" => "#{@github_url}/blob/main/CHANGELOG.md",

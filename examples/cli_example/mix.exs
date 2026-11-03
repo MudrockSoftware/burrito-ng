@@ -15,8 +15,8 @@ defmodule ExampleCliApp.MixProject do
   def releases do
     [
       example_cli_app: [
-        steps: [:assemble, &Burrito.wrap/1],
-        burrito: [
+        steps: [:assemble, &BurritoNg.wrap/1],
+        burrito_ng: [
           targets: [
             macos: [os: :darwin, cpu: :x86_64],
             macos_m1: [os: :darwin, cpu: :aarch64],
@@ -29,7 +29,7 @@ defmodule ExampleCliApp.MixProject do
             build: [post: [ExampleCliApp.CustomBuildStep]]
           ],
           debug: Mix.env() != :prod,
-          plugin: "./test_plugin/plugin.zig",
+          plugin: "./test_plugin/plugin.rs",
           no_clean: false
         ]
       ]

@@ -1,4 +1,4 @@
-defmodule Burrito.Builder.Log do
+defmodule BurritoNg.Builder.Log do
   def info(type, message) do
     IO.puts(get_prefix(type) <> message)
   end

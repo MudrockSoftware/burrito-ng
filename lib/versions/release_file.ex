@@ -1,4 +1,4 @@
-defmodule Burrito.Versions.ReleaseFile do
+defmodule BurritoNg.Versions.ReleaseFile do
   @moduledoc """
   This module provides some helpful functions for requesting, parsing and sorting release files.
   A release file is a simplistic JSON format that contains the releases of an app, where to fetch them, and some release notes.

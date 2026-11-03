@@ -1,6 +1,7 @@
 # Burrito NG 🌯
 
 > **Burrito NG** is a maintained fork of [Burrito](https://github.com/burrito-elixir/burrito), maintained by MUDROCK SOFTWARE LTD.
+> It is **not compatible** with the original Burrito: modules, configuration keys, environment variables and plugins all use the `burrito_ng` / `BurritoNg` names, and versioning restarts at 1.0.0.
 
 [![Hex version badge](https://img.shields.io/hexpm/v/burrito_ng.svg)](https://hex.pm/packages/burrito_ng)
 
@@ -32,18 +33,18 @@
 ## What Is It?
 
 #### Background
-Burrito is our answer to the problem of distributing Elixir CLI applications across varied environments, where we cannot guarantee that the Erlang runtime is installed, and where we lack the permissions to install it ourselves. In particular, we have CLI tooling that must be deployed on-premise, by consultants, into customer environments that may be running MacOS, Linux, or Windows.
+Burrito NG is our answer to the problem of distributing Elixir CLI applications across varied environments, where we cannot guarantee that the Erlang runtime is installed, and where we lack the permissions to install it ourselves. In particular, we have CLI tooling that must be deployed on-premise, by consultants, into customer environments that may be running MacOS, Linux, or Windows.
 
 Furthermore, these tools depend on NIFs that we need to cross-compile for any of the environments that we support, from one common build server, running in our CI environment.
 
-We were heavily inspired by [Bakeware](https://github.com/bake-bake-bake/bakeware), which lays a lot of the ground work for our approach. Ultimately we implemented and expanded upon many of Bakeware's ideas using [Zig](https://ziglang.org/).
+We were heavily inspired by [Bakeware](https://github.com/bake-bake-bake/bakeware), which lays a lot of the ground work for our approach. Ultimately we implemented and expanded upon many of Bakeware's ideas, originally in [Zig](https://ziglang.org/), and today in [Rust](https://www.rust-lang.org/).
 
 #### Feature Overview
 * Builds a self-extracting archive for a Mix project, targeting Windows, MacOS, and Linux, containing:
   * Your compiled BEAM code
   * The required ERTS for your project
   * Compilation artifacts for any [elixir-make](https://github.com/elixir-lang/elixir_make) based NIFs used by the project
-* Provides a "plugin" interface for injecting Zig code into your application's boot sequence
+* Provides a "plugin" interface for injecting Rust code into your application's boot sequence
   * We use this to perform automatic updates and licensing checks (see `lib/versions/release_file.ex` for details)
 * Automatically uninstalls old versions of the payload if a new version is run.
 
@@ -52,16 +53,16 @@ We provide pre-compiled Erlang/OTP distributions starting from `OTP-25.3` onward
 If you require an older version, please refer to the section about (providing custom Erlang/OTP builds)[#using-custom-erts-builds].
 
 #### Technical Component Overview
-Burrito is composed of a few different components:
-* **Mix Release Module** - A module that is executed as a Mix release step. This module takes care of packing up the files, downloading and copying in different Erlang VM Runtime files, and launching the Zig Archiver and Wrapper.
-* **Zig Archiver** - A small Zig library that packs up an entire directory into a tar-like blob. This is known as the "payload" -- which will contain all the compiled BEAM code for your release, and the ERTS for the target platform. This is Gzip compressed and then embedded directly into the wrapper program.
-* **Zig Wrapper** - This is portable cross-platform Zig code that wraps around the payload generated during the Mix release process. Erlang is launched in [Embedded Mode](https://www.erlang.org/doc/apps/kernel/config#sys-config) (for more details see [System Principles](https://www.erlang.org/doc/system/system_principles#code-loading-strategy)) directly from Zig using `execve()` (on Windows we use a child process).
+Burrito NG is composed of a few different components:
+* **Mix Release Module** - A module that is executed as a Mix release step. This module takes care of packing up the files, downloading and copying in different Erlang VM Runtime files, and building the Rust Wrapper.
+* **Payload** - The release directory, containing all the compiled BEAM code for your release and the ERTS for the target platform, packed into a tar archive (with the [`tar`](https://crates.io/crates/tar) crate) and xz compressed (with the pure Rust [`lzma-rust2`](https://crates.io/crates/lzma-rust2) crate). This is done by the wrapper's Cargo build script (`build.rs`), and the result is embedded directly into the wrapper program.
+* **Rust Wrapper** - This is portable cross-platform Rust code that wraps around the payload generated during the Mix release process. Erlang is launched in [Embedded Mode](https://www.erlang.org/doc/apps/kernel/config#sys-config) (for more details see [System Principles](https://www.erlang.org/doc/system/system_principles#code-loading-strategy)) as a child process of the wrapper.
 
 ```
-      Burrito Produced Binary
+    Burrito NG Produced Binary
 ┌────────────────────────────────┐
 │                                │
-│       Zig Wrapper Binary       │ <---- Compiled from `wrapper.zig`
+│      Rust Wrapper Binary       │ <---- Compiled from `src/main.rs`
 │                                │
 ├────────────────────────────────┤
 │        Payload Archive         │
@@ -70,7 +71,7 @@ Burrito is composed of a few different components:
 │ │    ERTS Native Binaries    │ <------ If cross-compiling, this is downloaded from a build server
 │ │                            │ │
 │ └────────────────────────────┘ │
-│                                │ <---- This bottom payload portion is generated by `archiver.zig`
+│                                │ <---- This bottom payload portion is generated by `build.rs`
 │ ┌────────────────────────────┐ │
 │ │                            │ │
 │ │   Application BEAM Code    │ │
@@ -82,7 +83,7 @@ Burrito is composed of a few different components:
 
 #### End To End Overview
 
- 1. You build a Burrito wrapped binary of your application and send it to an end-user
+ 1. You build a Burrito NG wrapped binary of your application and send it to an end-user
  2. The end-user launches your binary like any other native application on their system
  3. In the background (first-run only) the payload is extracted into a well defined location on the system. (AppData, Application Support, etc.)
  4. The wrapper executes the Erlang runtime in the background, and transparently launches your application within the same process
@@ -90,21 +91,21 @@ Burrito is composed of a few different components:
 
 ## Quick Start
 #### Disclaimer
-Burrito was built with our specific use case in mind, and while we've found success with deploying applications packaged using Burrito to a number of production environments, the approach we're taking is still experimental.
+Burrito NG was built with our specific use case in mind, and while we've found success with deploying applications packaged using Burrito NG to a number of production environments, the approach we're taking is still experimental.
 
-That being said, we're excited by our early use of the tooling, and are eager to accept community contributions that improve the reliability of Burrito, or that add support for additional platforms.
+That being said, we're excited by our early use of the tooling, and are eager to accept community contributions that improve the reliability of Burrito NG, or that add support for additional platforms.
 
 #### Preparation and Requirements
 
-**NOTE:** Due to current limitations of Zig, some platforms are less suited as build machines than others: we've found the most success building from Linux and MacOS. The matrix below outlines which build targets are currently supported by each host.
+The matrix below outlines which build targets are currently supported by each host.
 
 |Target| Host | Host | Host | Host |
 |--|--|--|--|--|
 | | Windows x64 | Linux | MacOS (x86_64) | MacOS (Apple Silicon) |
 | Windows x64 |❌|✅|✅|✅|
 | Linux |❌|✅|✅|✅|
-| MacOS (x86_64) |❌|✅|✅|✅|
-| MacOS (Apple Silicon) |❌|✅|✅|✅|
+| MacOS (x86_64) |❌|⚠️ (requires osxcross)|✅|✅|
+| MacOS (Apple Silicon) |❌|⚠️ (requires osxcross)|✅|✅|
 
 We support _targeting_ Windows (x86_64) from MacOS and Linux, we _do not_ officially support building ON Windows, it's recommended you use WSL if your development machine is Windows.
 
@@ -112,9 +113,32 @@ We support _targeting_ Windows (x86_64) from MacOS and Linux, we _do not_ offici
 
 You must have the following installed and in your PATH:
 
-* Zig (0.15.2) -- `zig`
-* XZ -- `xz`
+* Rust (1.85 or newer) -- `cargo`, installed with [rustup](https://rustup.rs)
+* The Rust standard library for each of your targets: `rustup target add <triple>`
+  * Linux: `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`
+  * MacOS: `x86_64-apple-darwin`, `aarch64-apple-darwin`
+  * Windows: `x86_64-pc-windows-gnu`
 * 7z -- `7z` (For Windows Targets)
+
+The wrapper's Rust dependencies are fetched from [crates.io](https://crates.io) by Cargo the first time a wrapper is built, and are cached afterwards.
+
+Depending on your targets you will also need some platform toolchains:
+
+* **Linux targets** need nothing extra to build the wrapper, it is linked with the `rust-lld` linker that ships with Rust.
+* **Windows targets** need the MinGW-w64 linker (`x86_64-w64-mingw32-gcc`). Debian/Ubuntu: `apt install mingw-w64`, MacOS: `brew install mingw-w64`.
+* **MacOS targets** build out of the box on MacOS (with the Xcode command line tools). From Linux you need a MacOS SDK and linker such as [osxcross](https://github.com/tpoechtrager/osxcross), configured through Cargo's standard linker variable, e.g. `CARGO_TARGET_AARCH64_APPLE_DARWIN_LINKER=aarch64-apple-darwin23-clang`.
+
+You can always override the linker Burrito NG picks for a target with Cargo's `CARGO_TARGET_<TRIPLE>_LINKER` environment variable.
+
+**NIFs:** If your project uses [elixir_make](https://github.com/elixir-lang/elixir_make) based NIFs, Burrito NG re-compiles them for every cross-build target (Linux targets always count as cross-builds, since our pre-compiled ERTS is linked against musl). This needs a C cross compiler for each target, which Burrito NG looks for in your PATH:
+
+|Target| Default C compiler | Where to get it |
+|--|--|--|
+| Linux | `<cpu>-unknown-linux-musl-gcc` (or `<cpu>-linux-musl-gcc`) | Linux: [cross-tools/musl-cross](https://github.com/cross-tools/musl-cross), MacOS: `brew install messense/macos-cross-toolchains/<cpu>-unknown-linux-musl` |
+| Windows | `<cpu>-w64-mingw32-gcc` | `apt install mingw-w64` / `brew install mingw-w64` |
+| MacOS | `clang -target <cpu>-apple-macos11` | Xcode command line tools (MacOS hosts only) |
+
+You can point Burrito NG at a different compiler with the `nif_cc` / `nif_cxx` / `nif_ar` / `nif_ranlib` [qualifiers](#build-targets-and-qualifiers).
 
 ----
 
@@ -124,11 +148,16 @@ You must have the following installed and in your PATH:
 
     ```elixir
     defp deps do
-      [{:burrito_ng, "~> 1.6"}]
+      [{:burrito_ng, "~> 1.0"}]
     end
     ```
 
-    If you are migrating from `burrito`, replace `{:burrito, ...}` with `{:burrito_ng, ...}` in your deps. No other changes are needed.
+    If you are migrating from the original `burrito`, note that Burrito NG is not a drop-in replacement:
+    * `Burrito.*` modules are now `BurritoNg.*` (e.g. `&BurritoNg.wrap/1`, `BurritoNg.Util.Args`).
+    * The release config key is `burrito_ng:` instead of `burrito:`.
+    * Environment variables use the `BURRITO_NG_` prefix (e.g. `BURRITO_NG_TARGET`, `__BURRITO_NG_BIN_PATH`).
+    * Plugins are Rust files with a `burrito_ng_plugin_entry` function, instead of Zig files.
+    * Apps are installed under `.burrito_ng` instead of `.burrito`, and binaries are written to `burrito_ng_out/`.
 
 2. Create a `releases` function in your `mix.exs`, add and configure the following for your project:
 
@@ -136,8 +165,8 @@ You must have the following installed and in your PATH:
     def releases do
       [
         example_cli_app: [
-          steps: [:assemble, &Burrito.wrap/1],
-          burrito: [
+          steps: [:assemble, &BurritoNg.wrap/1],
+          burrito_ng: [
             targets: [
               macos: [os: :darwin, cpu: :x86_64],
               macos_silicon: [os: :darwin, cpu: :aarch64],
@@ -169,9 +198,9 @@ You must have the following installed and in your PATH:
     MIX_ENV=prod mix release
     ```
 
-    Per-target binaries are now available in the `burrito_out/` folder.
+    Per-target binaries are now available in the `burrito_ng_out/` folder.
 
-5. You can also build a single target by setting the `BURRITO_TARGET` environment variable to the alias for that target (e.g. Setting `BURRITO_TARGET=macos` builds only the `macos` target defined above.)
+5. You can also build a single target by setting the `BURRITO_NG_TARGET` environment variable to the alias for that target (e.g. Setting `BURRITO_NG_TARGET=macos` builds only the `macos` target defined above.)
 
 NOTE: In order to speed up iteration times during development, if the Mix environment is not set to `prod`, the binary will always extract its payload, even if that version of the application has already been unpacked on the target machine.
 
@@ -180,14 +209,14 @@ NOTE: In order to speed up iteration times during development, if the Mix enviro
 * `targets` - A list of atoms, the targets you want to build for (`:darwin`, `:win64`, `:linux`, `:linux_musl`) whenever you run a `mix release` command -- if not defined, defaults to native host platform only.
 * `debug` - Boolean, will produce a debug build if set to true. (Default: `false`)
 * `no_clean` - Boolean, will not clean up after building if set to true. (Default: `false`)
-* `plugin` - String, a path to a Zig file that contains a function `burrito_plugin_entry()` which will be called before unpacking the payload at runtime. See [the example application for details.](examples/cli_example/test_plugin/plugin.zig)
+* `plugin` - String, a path to a Rust source file (`.rs`) that contains a function `pub fn burrito_ng_plugin_entry(install_dir: &str, program_manifest_json: &str)`, which will be called before unpacking the payload at runtime. The file is compiled into the wrapper and may only use the Rust standard library. See [the example application for details.](examples/cli_example/test_plugin/plugin.rs)
 
 #### Build-Time Environment Variables
 
-* `BURRITO_TARGET` - Override the list of targets provided in your release configuration. (ex: `BURRITO_TARGET=win64`, `BURRITO_TARGET=linux,darwin`)
+* `BURRITO_NG_TARGET` - Override the list of targets provided in your release configuration. (ex: `BURRITO_NG_TARGET=win64`, `BURRITO_NG_TARGET=linux,darwin`)
 
 #### Application Entry Point
-For Burrito to work properly you must define a `:mod` in your project's Mix config:
+For Burrito NG to work properly you must define a `:mod` in your project's Mix config:
 ```elixir
 def application do
   [
@@ -206,14 +235,14 @@ defmodule MyEntryModule do
 end
 ```
 
-If you wish you retrieve the argv passed to your program by Burrito use this snippet:
+If you wish you retrieve the argv passed to your program by Burrito NG use this snippet:
 
 ```elixir
-args = Burrito.Util.Args.argv() # this returns a list of strings
+args = BurritoNg.Util.Args.argv() # this returns a list of strings
 ```
 
 #### Maintenance Commands
-Binaries built by Burrito include a built-in set of commands for performing maintenance operations against the included application:
+Binaries built by Burrito NG include a built-in set of commands for performing maintenance operations against the included application:
 
 * `./my-binary maintenance uninstall` - Will prompt to uninstall the unpacked payload on the host machine.
 
@@ -225,9 +254,9 @@ Binaries built by Burrito include a built-in set of commands for performing main
 
 #### Build Steps and Phases
 
-Burrito runs the mix release task in three "Phases". Each of these phases contains a number of "Steps", and a context struct containing the current state of the build, which is passed between each step.
+Burrito NG runs the mix release task in three "Phases". Each of these phases contains a number of "Steps", and a context struct containing the current state of the build, which is passed between each step.
 
-The three phases of the Burrito build pipeline are:
+The three phases of the Burrito NG build pipeline are:
 
   * `Fetch` - This phase is responsible for downloading or locally locating any replacement ERTS builds for cross-build targets.
   * `Patch` - This phase copies replacement ERTS files, and re-compiles NIFs (if any). This phase is also where any custom files should be copied into the build directory before being archived.
@@ -242,9 +271,9 @@ The three phases of the Burrito build pipeline are:
   def releases do
     [
       my_app: [
-        steps: [:assemble, &Burrito.wrap/1],
-        burrito: [
-          # ... other Burrito configuration
+        steps: [:assemble, &BurritoNg.wrap/1],
+        burrito_ng: [
+          # ... other Burrito NG configuration
           extra_steps: [
             fetch: [pre: [MyCustomStepModule, AnotherCustomStepModule]],
             build: [post: [CustomStepAgain, YetAnotherCustomStepModule]]
@@ -257,7 +286,7 @@ The three phases of the Burrito build pipeline are:
 
   You can override default steps or phases by setting the `phases` option.
 
-  If your build phase's requirements are different to Burrito's, specify your own `assemble` step that calls `Burrito.Builder.build(release)`.
+  If your build phase's requirements are different to Burrito NG's, specify your own `assemble` step that calls `BurritoNg.Builder.build(release)`.
 
   ```elixir
     # ... mix.exs file
@@ -265,8 +294,8 @@ The three phases of the Burrito build pipeline are:
       [
         my_app: [
           steps: [:assemble, &MyProject.wrap/1],
-          burrito: [
-            # ... other Burrito configuration
+          burrito_ng: [
+            # ... other Burrito NG configuration
             phases: [
               build: [MyProject.CustomBuildStep1, MyProject.CustomBuildStep2]
             ]
@@ -280,7 +309,7 @@ The three phases of the Burrito build pipeline are:
   defmodule MyProject
     def wrap(%Mix.Release{} = release) do
       pre_check(release)
-      Burrito.Builder.build(release)
+      BurritoNg.Builder.build(release)
     end
 
     defp pre_check(release) do
@@ -291,7 +320,7 @@ The three phases of the Burrito build pipeline are:
 
 #### Build Targets and Qualifiers
 
-A Burrito build target is a keyword list that contains an operating system, a CPU architecture, and extra build options (called Qualifiers).
+A Burrito NG build target is a keyword list that contains an operating system, a CPU architecture, and extra build options (called Qualifiers).
 
 Here's a definition for a build target configured for Linux x86-64 that adds extra `CFLAGS` to the NIF recompile step:
 
@@ -301,20 +330,22 @@ targets: [
 ]
 ```
 
-Build qualifiers are a simple way to pass specific flags into the Burrito build pipeline. Here is a list of the supported qualifiers:
+Build qualifiers are a simple way to pass specific flags into the Burrito NG build pipeline. Here is a list of the supported qualifiers:
 
 * `custom_erts` - `binary()` or `URI.t()` that points to a custom tar.gz. See [Using custom ERTS builds](#using-custom-erts-builds) for more info.
 * `nif_cflags` - `binary()` String that is appended to the end of `CFLAGS` when recompiling NIFs for another target.
 * `nif_cxxflags` - `binary()` String that is appended to the end of `CXXFLAGS` when recompiling NIFs for another target.
 * `nif_env` - `list(tuple())` List of 2-tuples (strings) that define environment variables when recompiling NIFs for another target.
 * `nif_make_args` - `binary()` String that is appended to the `make` call when Elixir make is invoked for recompiling NIFs.
+* `nif_cc` / `nif_cxx` - `binary()` The C / C++ compiler command used when recompiling NIFs for another target (e.g. `"x86_64-linux-musl-gcc"`). See [Preparation and Requirements](#preparation-and-requirements) for the defaults.
+* `nif_ar` / `nif_ranlib` - `binary()` The `ar` / `ranlib` commands used when recompiling NIFs for another target.
 * `skip_nifs` - `boolean()` Boolean value, defaults to `false`, if set to `true` NIFs will NOT be recompiled. Use this if you want to copy in NIFs that you recompiled yourself in combination with extra/custom build steps.
 
 Tip: You can use these qualifiers as a way to pass per-target information into your custom build steps.
 
 #### Using Custom ERTS Builds
 
-The Burrito project provides precompiled builds of Erlang for the following platforms:
+The upstream Burrito project provides precompiled builds of Erlang for the following platforms:
 
 ```elixir
 [os: :darwin, cpu: :x86_64],
@@ -365,7 +396,7 @@ tar czf my_custom_erts.tar.gz otp-A.B.C-OS-ARCH
 
 #### Phx Tips
 
-In order to run a Phoenix app with Burrito, you may need to edit your `runtime.exs` file to ensure it will always start up the server:
+In order to run a Phoenix app with Burrito NG, you may need to edit your `runtime.exs` file to ensure it will always start up the server:
 
 ```elixir
 # This is the default line in runtime.exs, you can remove the if statement wrapping this config line, or check for other conditions:
@@ -374,9 +405,9 @@ if System.get_env("PHX_SERVER") do
 end
 ```
 
-If you do not want to edit `runtime.exs` just ensure the environment variable `PHX_SERVER` is set to `1` when you launch your burrito wrapped binary. Otherwise it will simply exit without starting your server application.
+If you do not want to edit `runtime.exs` just ensure the environment variable `PHX_SERVER` is set to `1` when you launch your Burrito NG wrapped binary. Otherwise it will simply exit without starting your server application.
 
-Additionally, you should take care to ensure you compile your assets BEFORE you wrap your application with Burrito.
+Additionally, you should take care to ensure you compile your assets BEFORE you wrap your application with Burrito NG.
 
 #### Runtime Requirements
 Minimizing the runtime dependencies of the package binaries is an explicit design goal, and the requirements for each platform are as follows:

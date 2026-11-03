@@ -1,12 +1,12 @@
-defmodule Burrito.Util.Args do
+defmodule BurritoNg.Util.Args do
   @moduledoc """
   This module provides a method to help fetch CLI arguments, whether passed down
-  from the Zig wrapper binary or from the the system.
+  from the wrapper binary or from the the system.
   """
 
   @doc """
-  Get CLI arguments passed down from the Zig wrapper binary. Do note that this will get OTP
-  runtime arguments when called outside of a Burrito-built context. You may consider
+  Get CLI arguments passed down from the wrapper binary. Do note that this will get OTP
+  runtime arguments when called outside of a Burrito NG-built context. You may consider
   `argv/0` as a more general alternative.
   """
   @spec get_arguments :: list(String.t())
@@ -15,11 +15,11 @@ defmodule Burrito.Util.Args do
   end
 
   @doc """
-  Get the arguments from the CLI, regardless if run under Burrito or not.
+  Get the arguments from the CLI, regardless if run under Burrito NG or not.
   """
   @spec argv :: list(String.t())
   def argv do
-    if Burrito.Util.running_standalone?() do
+    if BurritoNg.Util.running_standalone?() do
       get_arguments()
     else
       System.argv()
@@ -28,16 +28,16 @@ defmodule Burrito.Util.Args do
 
   @doc """
   Returns the path of the wrapper binary that launched this application.
-  If not currently inside a Burrito wrapped application, returns `:not_in_burrito`.
+  If not currently inside a Burrito NG wrapped application, returns `:not_in_burrito_ng`.
   """
-  @spec get_bin_path() :: binary() | :not_in_burrito
+  @spec get_bin_path() :: binary() | :not_in_burrito_ng
   def get_bin_path() do
-    env_value = System.get_env("__BURRITO_BIN_PATH")
+    env_value = System.get_env("__BURRITO_NG_BIN_PATH")
 
     if env_value != nil do
       env_value
     else
-      :not_in_burrito
+      :not_in_burrito_ng
     end
   end
 end

@@ -1,7 +1,7 @@
-defmodule Burrito.Builder.Context do
+defmodule BurritoNg.Builder.Context do
   use TypedStruct
 
-  alias Burrito.Builder.Target
+  alias BurritoNg.Builder.Target
 
   @type erts_location :: nil | {:release | :local | :url | :unpacked | :unresolved, term()}
 

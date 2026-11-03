@@ -1,12 +1,13 @@
-defmodule Burrito.Steps.Build.CopyRelease do
-  alias Burrito.Builder.Context
-  alias Burrito.Builder.Step
+defmodule BurritoNg.Steps.Build.CopyRelease do
+  alias BurritoNg.Builder.Context
+  alias BurritoNg.Builder.Step
+  alias BurritoNg.Steps.Build.PackAndBuild
 
   @behaviour Step
 
   @success_banner """
   \n\n
-  🌯 Burrito has wrapped your Elixir app! 🌯
+  🌯 Burrito NG has wrapped your Elixir app! 🌯
   """
 
   @impl Step
@@ -15,13 +16,6 @@ defmodule Burrito.Steps.Build.CopyRelease do
     release_name = Atom.to_string(context.mix_release.name)
     target_name = Atom.to_string(context.target.alias)
 
-    orig_bin_name =
-      if context.target.os == :windows do
-        "#{release_name}.exe"
-      else
-        release_name
-      end
-
     bin_name =
       if context.target.os == :windows do
         "#{release_name}_#{target_name}.exe"
@@ -29,8 +23,8 @@ defmodule Burrito.Steps.Build.CopyRelease do
         "#{release_name}_#{target_name}"
       end
 
-    bin_path = Path.join(context.self_dir, ["zig-out", "/bin", "/#{orig_bin_name}"])
-    bin_out_path = Path.join(app_path, ["burrito_out"])
+    bin_path = PackAndBuild.wrapper_binary_path(context)
+    bin_out_path = Path.join(app_path, ["burrito_ng_out"])
     File.mkdir_p!(bin_out_path)
 
     output_bin_path = Path.join(bin_out_path, [bin_name])
@@ -42,7 +36,10 @@ defmodule Burrito.Steps.Build.CopyRelease do
     end
 
     File.copy!(bin_path, output_bin_path)
-    File.rm!(bin_path)
+
+    if !context.mix_release.options[:burrito_ng][:no_clean] do
+      PackAndBuild.clean(context)
+    end
 
     # Mark resulting bin as executable
     File.chmod!(output_bin_path, 0o744)

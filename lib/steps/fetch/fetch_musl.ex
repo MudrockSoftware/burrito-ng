@@ -1,10 +1,10 @@
-defmodule Burrito.Steps.Fetch.FetchMusl do
-  alias Burrito.Builder.Context
-  alias Burrito.Builder.Log
-  alias Burrito.Builder.Step
-  alias Burrito.Builder.Target
+defmodule BurritoNg.Steps.Fetch.FetchMusl do
+  alias BurritoNg.Builder.Context
+  alias BurritoNg.Builder.Log
+  alias BurritoNg.Builder.Step
+  alias BurritoNg.Builder.Target
 
-  alias Burrito.Util.FileCache
+  alias BurritoNg.Util.FileCache
 
   # Linked against musl libc v1.2.5
   @linux_musl_url "https://beam-machine-universal.b-cdn.net/musl/libc-musl-{HASH}.so"
@@ -35,7 +35,7 @@ defmodule Burrito.Steps.Fetch.FetchMusl do
           do_download(so_url, cache_key)
       end
 
-    out_path = Path.join([context.self_dir, "src", "musl-runtime.so"])
+    out_path = context.work_dir <> "_musl-runtime.so"
     File.write!(out_path, so_bytes)
 
     Log.success(:step, "Wrote musl runtime file: #{out_path}")
@@ -44,7 +44,10 @@ defmodule Burrito.Steps.Fetch.FetchMusl do
       context
       | extra_build_env:
           context.extra_build_env ++
-            [{"__BURRITO_MUSL_RUNTIME_PATH", "/tmp/libc-musl-#{get_runtime_hash(arch)}.so"}]
+            [
+              {"__BURRITO_NG_MUSL_RUNTIME_FILE", out_path},
+              {"__BURRITO_NG_MUSL_RUNTIME_PATH", "/tmp/libc-musl-#{get_runtime_hash(arch)}.so"}
+            ]
     }
   end
 
@@ -55,7 +58,7 @@ defmodule Burrito.Steps.Fetch.FetchMusl do
     Log.info(:step, "Downloading file: #{url}")
 
     resp =
-      case Burrito.Util.get_proxy() do
+      case BurritoNg.Util.get_proxy() do
         proxy = %{scheme: scheme, host: host, port: port} when scheme in ["http", "https"] ->
           Log.info(:step, "Using PROXY: #{proxy}")
           proxy = {String.to_atom(scheme), host, port, []}

@@ -1,5 +1,5 @@
-defmodule Burrito.Util.ERTSUniversalMachineFetcher do
-  alias Burrito.Builder.Log
+defmodule BurritoNg.Util.ERTSUniversalMachineFetcher do
+  alias BurritoNg.Builder.Log
 
   @windows_url "https://github.com/erlang/otp/releases/download/OTP-{OTP_VERSION}/otp_win64_{OTP_VERSION}.exe"
   @linux_url "https://beam-machine-universal.b-cdn.net/OTP-{OTP_VERSION}/linux/{ARCH}/any/otp_{OTP_VERSION}_linux_any_{ARCH}.tar.gz"
@@ -35,7 +35,7 @@ defmodule Burrito.Util.ERTSUniversalMachineFetcher do
 
   defp append_versions() do
     # These are used to cache-bust when openssl or musl versions are changed upstream in the BEAM Machine build server
-    versions = Burrito.get_versions()
+    versions = BurritoNg.get_versions()
     "&openssl=#{to_string(versions.openssl)}&musl=#{to_string(versions.musl)}"
   end
 end

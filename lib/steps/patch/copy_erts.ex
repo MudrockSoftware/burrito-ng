@@ -1,10 +1,10 @@
-defmodule Burrito.Steps.Patch.CopyERTS do
+defmodule BurritoNg.Steps.Patch.CopyERTS do
   @moduledoc """
   This step copies the new ERTS bins into the release, as well as replaces built-in NIFs.
   """
-  alias Burrito.Builder.Context
-  alias Burrito.Builder.Log
-  alias Burrito.Builder.Step
+  alias BurritoNg.Builder.Context
+  alias BurritoNg.Builder.Log
+  alias BurritoNg.Builder.Step
 
   @behaviour Step
 

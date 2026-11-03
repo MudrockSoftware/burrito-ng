@@ -8,4 +8,4 @@ This is an example usage of [Burrito NG](https://github.com/MudrockSoftware/burr
 2) Build a release:
     - In debug mode: `mix release`
     - In production mode: `MIX_ENV=prod mix release` 
-4) Execute the compiled binary: `burrito_out/example_cli_app_native`
+4) Execute the compiled binary: `burrito_ng_out/example_cli_app_native`

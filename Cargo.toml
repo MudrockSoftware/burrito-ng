@@ -1,0 +1,53 @@
+# The Burrito NG wrapper binary.
+#
+# This crate is compiled once per Burrito NG target by `BurritoNg.Steps.Build.PackAndBuild`.
+# Its build script (`build.rs`) packs the Mix release into an xz-compressed tar archive
+# and embeds it (along with the release metadata and optional plugin) into the final executable.
+
+[package]
+name = "burrito_ng_wrapper"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+build = "build.rs"
+
+# Make this crate its own workspace root, so building it from inside a user's `deps/`
+# directory is never confused by a Cargo workspace further up the tree.
+[workspace]
+
+[[bin]]
+name = "burrito_ng_wrapper"
+path = "src/main.rs"
+
+# `src/payload.rs` is shared with build.rs, so the wrapper also enables the encoder;
+# it is unused there and dropped from the final binary by LTO.
+[dependencies]
+lzma-rust2 = { version = "0.25", default-features = false, features = ["std", "xz", "encoder", "optimization"] }
+semver = "1"
+serde_json = "1"
+tar = { version = "0.4.46", default-features = false }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[build-dependencies]
+lzma-rust2 = { version = "0.25", default-features = false, features = ["std", "xz", "encoder", "optimization"] }
+tar = { version = "0.4.46", default-features = false }
+
+# Production wrapper builds: optimize for size.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# The build script compresses the whole release payload, so always optimize it
+# (and its dependencies), even for debug wrapper builds.
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 16
+
+[profile.dev.build-override]
+opt-level = 3

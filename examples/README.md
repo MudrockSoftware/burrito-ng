@@ -1,6 +1,6 @@
-# Burrito Examples
+# Burrito NG Examples
 
-This directory contains a few sample applications that demonstrate the capabilities of Burrito!
+This directory contains a few sample applications that demonstrate the capabilities of Burrito NG!
 
 ## cli_example
 ----
@@ -11,7 +11,7 @@ A simple application that prints a random number and the arguments passed to it 
 ## only_one
 ----
 
-A simple CLI application that demonstrates Zig plugins, it will not allow more than 1 copy of the application to run at a time.
+A simple CLI application that demonstrates Rust plugins, it will not allow more than 1 copy of the application to run at a time.
 It utilizes a lockfile, and a NIF to catch SIGINT for proper lockfile cleanup. **Windows not supported currently.**
 
 ## phx_app

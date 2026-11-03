@@ -1,98 +1,23 @@
 # 🌯 Changelog
 
-## v1.6.0
+## v1.0.0
 
-* Changes:
-  * Update for Zig `0.16.0` compatibility. (Thanks @gilbertwong96 !)
+First release of Burrito NG, a maintained fork of [Burrito](https://github.com/burrito-elixir/burrito). Burrito NG is **not compatible** with the original Burrito.
 
-## v1.5.0
+* Differences from the original Burrito:
+  * Everything is named after Burrito NG:
+    * Modules: `Burrito.*` → `BurritoNg.*` (e.g. `&BurritoNg.wrap/1`, `BurritoNg.Util.Args`).
+    * Release config key: `burrito:` → `burrito_ng:`.
+    * Environment variables: `BURRITO_TARGET` → `BURRITO_NG_TARGET`, `__BURRITO` / `__BURRITO_BIN_PATH` → `__BURRITO_NG` / `__BURRITO_NG_BIN_PATH`.
+    * Install directory: `.burrito` → `.burrito_ng`, output directory: `burrito_out/` → `burrito_ng_out/`, download cache: `burrito_ng_file_cache`.
+  * The wrapper, archiver and build pipeline are written in Rust. Zig and the `xz` CLI are not used. Burrito NG needs Rust `1.85+` (`cargo`) plus the `rustup` target for each build target.
+  * Plugins are Rust source files: `plugin: "./my_plugin.rs"` with `pub fn burrito_ng_plugin_entry(install_dir: &str, program_manifest_json: &str)`.
+  * NIF cross-compilation uses per-target C cross compilers (musl GCC for Linux, MinGW-w64 for Windows, Xcode clang for MacOS) instead of `zig cc`. Override them with the `nif_cc`, `nif_cxx`, `nif_ar` and `nif_ranlib` target qualifiers.
+  * Windows targets need the MinGW-w64 linker. Building MacOS targets from Linux needs an osxcross-style linker set through `CARGO_TARGET_<TRIPLE>_LINKER`.
+  * The payload is a standard tar archive (`tar` crate), xz compressed with the pure Rust `lzma-rust2` crate, and unpacked as a stream at install time.
+  * The `maintenance meta` JSON contains `rust_version` / `build_arguments`.
+  * The wrapper's compiled dependencies are cached in `target/` between builds.
+  * A missing toolchain for a target is reported before any build phase runs.
+  * The musl runtime is written atomically at startup.
 
-* Changes:
-  * Bump Zig to version `0.15.2`.
-  * README improvements.
-  * Zig side logger improvements, do not use heap allocations.
-  * Fix warning when using `module.project()`.
-
-## v1.4.0
-
-* Changes:
-  * Add `CHANGELOG.md` (yay!).
-  * Remove fixed OpenSSL version tag from pre-build URL fetching modules.
-  * Allow overriding the cookie with `RELEASE_COOKIE` at runtime.
-  * Move `seven_z` check under `target.os` `:windows`.
-  * Bump zig to `0.14.1`.
-  * Fixed compiler warning in `module.project()` call.
-  * Remove deprecated `File.cp_r/3` usage in init step.
-  * Bump erlang to `28.0.2` and elixir to `1.18.4-otp-28`.
-  * Pre-Built ERTSs will now contain OpenSSL `3.5.1` and musl libc `1.2.5`.
-
-## v1.3.0
-
-* Changes:
-  * Use `7zz` CLI tool for unpacking Windows ERTS installers if available.
-  * Dependency bumps:
-    * erlang `27.2`
-    * elixir `1.18.1-otp-27`
-    * req `>= 0.5.0`
-    * jason `~> 1.4`
-    * zig `1.14.0`
-  * Fix broken `7z`/`7zz` check.
-
-## v1.2.0
-
-* Changes:
-  * README fixups.
-  * Add utility function to fetch wrapper exe path at runtime. (`Burrito.Util.Args.get_bin_path/0`)
-
-## v1.1.1
-
-* Changes:
-  * Release version requirement for Req library (`>= 0.4.0`).
-
-## v1.1.0
-
-* Changes:
-  * Add `Burrito.Util.running_standalone`.
-  * Add `Burrito.Util.Args.argv` to get arguments universally.
-  * Fix crash when fetching a custom ERTS build from a URL string location.
-  * README fix: Fix dead link to Erlang Embedded Mode docs.
-  * Bump Zig to `0.13.0`.
-
-## v1.0.5
-
-* Changes:
-  * Better handle files in the root of a release.
-  * Update Zig wrappers path computation to be more cross-platform native.
-  * Remove dead code from the Zig wrapper.
-  * Fix trying to re-extract the libc musl `.so` file when it already exists.
-  * Set up CI using Github Actions to validate cross builds and test examples.
-
-## v1.0.4
-
-* Changes
-  * Fix not setting `__BURRITO` env variable in Windows executables.
-
-## v1.0.3
-
-* Changes:
-  * Add qualifiers to targets to add CFLAGS, CXXFLAGS, ENV, and Make args to NIF re-compiler.
-  * Add runtime env variable __BURRITO to signify erlang is running in Burrito.
-  * Allow skipping NIF recompilation with build qualifier. (`:skip_nifs`)
-  * Add new qualifiers to README.
-
-## v1.0.2
-
-* Changes:
-  * Include the version file in releases.
-  * Bump req to `0.4.0`.
-  * Bump deps in example projects.
-
-## v1.0.1
-
-* Changes:
-  * Fix Hex package include files.
-
-## v1.0.0 
-
-* Changes:
-  * Initial Release
+For the history of the original project, see the [Burrito changelog](https://github.com/burrito-elixir/burrito/blob/main/CHANGELOG.md).

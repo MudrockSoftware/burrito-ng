@@ -27,19 +27,11 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-### zig ###
-# Zig programming language
-
-zig-cache/
-zig-out/
-**.zig-cache/**
-build-*/
-docgen_tmp/
+### Rust (wrapper) ###
+/target/
 
 *.exe
 *.pdb
-payload.foilz*
-_metadata.json
 
 ### Elixir ###
 /_build
@@ -52,5 +44,5 @@ erl_crash.dump
 *.beam
 /config/*.secret.exs
 .elixir_ls/
-**/burrito_out/**
+**/burrito_ng_out/**
 

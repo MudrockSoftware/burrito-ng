@@ -1,16 +1,16 @@
-defmodule Burrito.Util.DefaultERTSResolver do
-  alias Burrito.Builder.Target
-  alias Burrito.Builder.Log
+defmodule BurritoNg.Util.DefaultERTSResolver do
+  alias BurritoNg.Builder.Target
+  alias BurritoNg.Builder.Log
 
-  alias Burrito.Util
-  alias Burrito.Util.FileCache
-  alias Burrito.Util.ERTSResolver
-  alias Burrito.Util.ERTSUniversalMachineFetcher
+  alias BurritoNg.Util
+  alias BurritoNg.Util.FileCache
+  alias BurritoNg.Util.ERTSResolver
+  alias BurritoNg.Util.ERTSUniversalMachineFetcher
 
   @behaviour ERTSResolver
 
   @impl ERTSResolver
-  @spec do_resolve(Burrito.Builder.Target.t()) :: Burrito.Builder.Target.t()
+  @spec do_resolve(BurritoNg.Builder.Target.t()) :: BurritoNg.Builder.Target.t()
   def do_resolve(%Target{erts_source: {:runtime, _}} = target) do
     %Target{target | erts_source: {:runtime, version: Util.get_otp_version()}}
   end
@@ -100,7 +100,7 @@ defmodule Burrito.Util.DefaultERTSResolver do
     Log.info(:step, "Downloading file: #{url}")
 
     resp =
-      case Burrito.Util.get_proxy() do
+      case BurritoNg.Util.get_proxy() do
         proxy = %{scheme: scheme, host: host, port: port} when scheme in ["http", "https"] ->
           Log.info(:step, "Using PROXY: #{proxy}")
           proxy = {String.to_atom(scheme), host, port, []}

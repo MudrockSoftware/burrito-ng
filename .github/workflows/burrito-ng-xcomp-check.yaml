@@ -1,0 +1,152 @@
+name: "Burrito Cross Build Build Tests"
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  # cross-tools/musl-cross release used for cross-compiling NIFs to Linux on Linux hosts
+  MUSL_CROSS_RELEASE: "20261001"
+
+jobs:
+  wrapper_unit_tests:
+    name: wrapper_unit_tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  build_examples:
+    name: build_examples_${{ matrix.host }}
+    runs-on: ${{ matrix.host }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux hosts can't link macOS binaries without an Apple SDK, so they skip macOS targets.
+          - host: ubuntu-latest
+            burrito_ng_targets: "linux linux_aarch64 windows"
+          - host: macos-latest
+            burrito_ng_targets: "macos macos_m1 linux linux_aarch64 windows"
+    steps:
+      # Deps
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: "27.3"
+          elixir-version: "1.18.3"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl,aarch64-unknown-linux-musl,x86_64-pc-windows-gnu,x86_64-apple-darwin,aarch64-apple-darwin
+
+      # Cross toolchains: MinGW-w64 for Windows, musl GCC for recompiling NIFs for Linux
+      - name: Install cross toolchains (Linux)
+        if: matrix.host == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install mingw-w64
+          for triple in x86_64-unknown-linux-musl aarch64-unknown-linux-musl; do
+            url="https://github.com/cross-tools/musl-cross/releases/download/${MUSL_CROSS_RELEASE}/${triple}.tar.xz"
+            curl -fsSL -o "/tmp/${triple}.tar.xz" "$url"
+            curl -fsSL -o "/tmp/${triple}.tar.xz.sha256" "$url.sha256"
+            echo "$(cut -d' ' -f1 "/tmp/${triple}.tar.xz.sha256")  /tmp/${triple}.tar.xz" | sha256sum -c -
+            sudo mkdir -p /opt/musl-cross
+            sudo tar -xJf "/tmp/${triple}.tar.xz" -C /opt/musl-cross
+            echo "/opt/musl-cross/${triple}/bin" >> "$GITHUB_PATH"
+          done
+
+      - name: Install cross toolchains (macOS)
+        if: matrix.host == 'macos-latest'
+        run: |
+          brew install mingw-w64 \
+            messense/macos-cross-toolchains/x86_64-unknown-linux-musl \
+            messense/macos-cross-toolchains/aarch64-unknown-linux-musl
+
+      # Restore Cache
+      - uses: actions/cache/restore@v4
+        id: cache-restore
+        with:
+          path: |
+            ~/.cache/burrito_ng_file_cache/
+            ~/Library/Caches/burrito_ng_file_cache/
+            ~/.cargo/registry/
+          key: burrito-ng-download-cache_${{ matrix.host }}
+
+      # Build Example CLI App, one target at a time
+      - name: cli_example
+        working-directory: "./examples/cli_example"
+        run: |
+          mix deps.get
+          for target in ${{ matrix.burrito_ng_targets }}; do
+            BURRITO_NG_TARGET=$target mix release --overwrite
+          done
+
+      # Save Cache
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            ~/.cache/burrito_ng_file_cache/
+            ~/Library/Caches/burrito_ng_file_cache/
+            ~/.cargo/registry/
+          key: burrito-ng-download-cache_${{ matrix.host }}
+
+      # Upload Wrapped Binaries
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: burrito_ng_${{ matrix.host }}_host_bins
+          path: ./examples/**/burrito_ng_out/*
+          retention-days: 1
+
+  #### Run example binaries ####
+  # Windows binaries: built on Linux/macOS hosts, run on windows-latest
+  run_examples_windows:
+    needs: build_examples
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ubuntu-latest, macos-latest]
+    runs-on: windows-latest
+    steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: burrito_ng_${{ matrix.host }}_host_bins
+      - run: cli_example/burrito_ng_out/example_cli_app_windows.exe
+
+  run_examples_linux:
+    needs: build_examples
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ubuntu-latest, macos-latest]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: burrito_ng_${{ matrix.host }}_host_bins
+      - run: chmod +x cli_example/burrito_ng_out/example_cli_app_linux
+      - run: cli_example/burrito_ng_out/example_cli_app_linux
+
+  # macOS binaries are only built on macOS hosts
+  run_examples_macos:
+    needs: build_examples
+    runs-on: macos-latest
+    steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: burrito_ng_macos-latest_host_bins
+      - run: chmod +x cli_example/burrito_ng_out/example_cli_app_macos cli_example/burrito_ng_out/example_cli_app_macos_m1
+      - run: cli_example/burrito_ng_out/example_cli_app_macos_m1
+      - run: cli_example/burrito_ng_out/example_cli_app_macos

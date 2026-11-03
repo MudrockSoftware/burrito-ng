@@ -1,4 +1,4 @@
-defmodule Burrito.Util do
+defmodule BurritoNg.Util do
   @spec get_current_os :: :darwin | :linux | :windows
   def get_current_os do
     case :os.type() do
@@ -40,12 +40,12 @@ defmodule Burrito.Util do
   end
 
   @doc """
-  Checks if the application is currently running as a standalone Burrito release, or via some other mechanism,
+  Checks if the application is currently running as a standalone Burrito NG release, or via some other mechanism,
   such as an `escript`.
   """
   @spec running_standalone?() :: boolean()
   def running_standalone?() do
-    System.get_env("__BURRITO") != nil
+    System.get_env("__BURRITO_NG") != nil
   end
 
   @doc """

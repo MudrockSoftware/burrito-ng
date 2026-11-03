@@ -1,14 +1,14 @@
-defmodule Burrito.Builder do
-  alias Burrito.Builder.Context
-  alias Burrito.Builder.Log
-  alias Burrito.Builder.Target
+defmodule BurritoNg.Builder do
+  alias BurritoNg.Builder.Context
+  alias BurritoNg.Builder.Log
+  alias BurritoNg.Builder.Target
 
-  alias Burrito.Steps.Build
-  alias Burrito.Steps.Fetch
-  alias Burrito.Steps.Patch
+  alias BurritoNg.Steps.Build
+  alias BurritoNg.Steps.Fetch
+  alias BurritoNg.Steps.Patch
 
   @moduledoc """
-  Burrito builds in "phases". Each phase contains any number of "steps" which are executed one after another.
+  Burrito NG builds in "phases". Each phase contains any number of "steps" which are executed one after another.
 
   There are 3 phases:
 
@@ -25,9 +25,9 @@ defmodule Burrito.Builder do
   def releases do
     [
       my_app: [
-        steps: [:assemble, &Burrito.wrap/1],
-        burrito: [
-          # ... other Burrito configuration
+        steps: [:assemble, &BurritoNg.wrap/1],
+        burrito_ng: [
+          # ... other Burrito NG configuration
           extra_steps: [
             fetch: [pre: [MyCustomStepModule, AnotherCustomStepModule]],
             build: [post: [CustomStepAgain, YetAnotherCustomStepModule]]
@@ -48,20 +48,20 @@ defmodule Burrito.Builder do
   ]
 
   def build(%Mix.Release{} = release) do
-    options = release.options[:burrito] || []
+    options = release.options[:burrito_ng] || []
     debug? = Keyword.get(options, :debug, false)
 
     build_targets = options[:targets]
 
     # look for override target in system env
     # if it's a valid target, set it as the only target
-    target_override_string = System.get_env("BURRITO_TARGET")
+    target_override_string = System.get_env("BURRITO_NG_TARGET")
 
     build_targets =
       if target_override_string do
         Log.warning(
           :build,
-          "Target is being overridden with BURRITO_TARGET #{target_override_string}"
+          "Target is being overridden with BURRITO_NG_TARGET #{target_override_string}"
         )
 
         override_atom =
@@ -106,11 +106,14 @@ defmodule Burrito.Builder do
         halted: false
       }
 
-      Log.info(:build, "Burrito is building target: #{target.alias}")
+      Log.info(:build, "Burrito NG is building target: #{target.alias}")
+
+      # Fail fast if the wrapper can't be compiled for this target
+      Build.PackAndBuild.check_toolchain!(target)
 
       Log.info(
         :build,
-        "Burrito will build for target:\n\tOS: #{target.os}\n\tCPU: #{target.cpu}\n\tQualifiers: #{inspect(target.qualifiers)}\n\tDebug: #{target.debug?}"
+        "Burrito NG will build for target:\n\tOS: #{target.os}\n\tCPU: #{target.cpu}\n\tQualifiers: #{inspect(target.qualifiers)}\n\tDebug: #{target.debug?}"
       )
 
       phases = [
@@ -130,7 +133,7 @@ defmodule Burrito.Builder do
     Log.info(:phase, "PHASE: #{inspect(phase_name)}")
 
     # Load in extra steps, pre and post
-    extra_steps = context.mix_release.options[:burrito][:extra_steps]
+    extra_steps = context.mix_release.options[:burrito_ng][:extra_steps]
     extra_steps_pre = extra_steps[phase_name][:pre] || []
     extra_steps_post = extra_steps[phase_name][:post] || []
 

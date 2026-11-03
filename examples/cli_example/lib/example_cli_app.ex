@@ -1,9 +1,9 @@
 defmodule ExampleCliApp do
   def start(_, _args) do
-    args = Burrito.Util.Args.get_arguments()
+    args = BurritoNg.Util.Args.get_arguments()
 
     IO.puts("My arguments are: #{inspect(args)}")
-    IO.puts("I was started from: #{Burrito.Util.Args.get_bin_path()}")
+    IO.puts("I was started from: #{BurritoNg.Util.Args.get_bin_path()}")
 
     test_release_cookie()
 

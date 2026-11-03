@@ -1,9 +1,9 @@
-defmodule Burrito.Steps.Fetch.ResolveERTS do
-  alias Burrito.Builder.Context
-  alias Burrito.Builder.Log
-  alias Burrito.Builder.Target
-  alias Burrito.Builder.Step
-  alias Burrito.Util.ERTSResolver
+defmodule BurritoNg.Steps.Fetch.ResolveERTS do
+  alias BurritoNg.Builder.Context
+  alias BurritoNg.Builder.Log
+  alias BurritoNg.Builder.Target
+  alias BurritoNg.Builder.Step
+  alias BurritoNg.Util.ERTSResolver
 
   @behaviour Step
 

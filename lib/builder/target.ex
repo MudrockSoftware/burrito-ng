@@ -1,8 +1,8 @@
-defmodule Burrito.Builder.Target do
+defmodule BurritoNg.Builder.Target do
   use TypedStruct
 
   alias __MODULE__
-  alias Burrito.Util
+  alias BurritoNg.Util
 
   @type erts_source ::
           {:unresolved | :runtime | :precompiled | :local | :local_unpacked | :url,
@@ -74,7 +74,18 @@ defmodule Burrito.Builder.Target do
       fields[:os] == :linux
   end
 
-  @spec make_triplet(Burrito.Builder.Target.t()) :: String.t()
+  @doc """
+  Returns the Rust target triple the wrapper binary is compiled for.
+
+  Linux wrappers are always statically linked against musl, so they run on any distribution.
+  """
+  @spec rust_triple(BurritoNg.Builder.Target.t()) :: String.t()
+  def rust_triple(%Target{os: :linux, cpu: cpu}), do: "#{cpu}-unknown-linux-musl"
+  def rust_triple(%Target{os: :darwin, cpu: cpu}), do: "#{cpu}-apple-darwin"
+  def rust_triple(%Target{os: :windows, cpu: :aarch64}), do: "aarch64-pc-windows-gnullvm"
+  def rust_triple(%Target{os: :windows, cpu: cpu}), do: "#{cpu}-pc-windows-gnu"
+
+  @spec make_triplet(BurritoNg.Builder.Target.t()) :: String.t()
   def make_triplet(%Target{} = target) do
     os =
       case target.os do
